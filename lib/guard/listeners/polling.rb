@@ -16,6 +16,25 @@ module Guard
       super
       @stop = true
     end
+    # only looks for content changes, not mtime changes
+    # useful when monitoring files across NFS where system time and file mtime are based on different clocks
+    def file_modified?(path)
+      file_content_modified?(path, sha1_checksum(path))
+    end
+
+    def file_content_modified?(path, sha1_checksum)
+      if @sha1_checksums_hash.has_key? path
+        if @sha1_checksums_hash[path] != sha1_checksum
+          set_sha1_checksums_hash(path, sha1_checksum)
+          true
+        else
+          false
+        end
+      else
+        set_sha1_checksums_hash(path, sha1_checksum)
+        false
+      end
+    end
 
   private
 
